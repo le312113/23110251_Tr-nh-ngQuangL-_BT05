@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Chỉnh sửa User</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        form {
+            width: 400px;
+            margin: 30px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f9f9f9;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<h2 style="text-align:center;">Chỉnh sửa User</h2>
+
+<form th:action="@{'/admin/user/edit'(id=${user.id})}" th:object="${user}" method="post">
+
+    <label>Email</label>
+    <input type="text" th:field="*{email}" placeholder="Nhập email" />
+
+    <label>Tên đăng nhập</label>
+    <input type="text" th:field="*{userName}" placeholder="Nhập username" />
+
+    <label>Họ và tên</label>
+    <input type="text" th:field="*{fullName}" placeholder="Nhập họ tên" />
+
+    <label>Mật khẩu</label>
+    <input type="password" th:field="*{passWord}" placeholder="Nhập mật khẩu" />
+
+    <label>Avatar (URL)</label>
+    <input type="text" th:field="*{avatar}" placeholder="Nhập link avatar" />
+
+    <label>Số điện thoại</label>
+    <input type="text" th:field="*{phone}" placeholder="Nhập số điện thoại" />
+
+    <button type="submit">Cập nhật</button>
+</form>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Thêm Video</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        form { width: 520px; margin: auto; border: 1px solid #ddd; padding: 16px; border-radius: 6px; }
+        label { display: block; margin-top: 12px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; margin-top: 6px; box-sizing: border-box; }
+        .actions { margin-top: 16px; display: flex; gap: 10px; }
+        .btn { padding: 8px 12px; border-radius: 4px; border: none; cursor: pointer; color: #fff; }
+        .save { background: #4CAF50; }
+        .cancel { background: #9e9e9e; text-decoration: none; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<h2 style="text-align:center;">Thêm Video</h2>
+
+<form th:action="@{/admin/video/add}" th:object="${video}" method="post">
+    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+    <!-- Danh mục: hiển thị cate_name, submit cate_id -->
+    <label for="category">Danh mục</label>
+    <select id="category" th:field="*{category.cate_id}" required>
+        <option th:value="-1" disabled selected>-- Chọn danh mục --</option> <!-- 👈 KHÔNG để value="" -->
+        <option th:each="c : ${categories}"
+                th:value="${c.cate_id}"
+                th:text="${c.cate_name}"></option>
+    </select>
+
+    <label for="title">Tiêu đề</label>
+    <input id="title" type="text" th:field="*{title}" required />
+
+    <label for="description">Mô tả</label>
+    <textarea id="description" rows="3" th:field="*{description}"></textarea>
+
+    <label for="url">URL Video</label>
+    <input id="url" type="text" th:field="*{url}" placeholder="https://youtube.com/..." required />
+
+    <div class="actions">
+        <button type="submit" class="btn save">Lưu</button>
+        <a th:href="@{/admin/video}" class="btn cancel">Hủy</a>
+    </div>
+</form>
+
+</body>
+</html>
