@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sửa Category</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        form { width: 400px; margin: auto; }
+        label { display: block; margin-top: 10px; }
+        input { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 15px; padding: 8px 12px; }
+        .preview { margin-top: 8px; }
+        .preview img { max-height: 50px; }
+    </style>
+</head>
+<body>
+
+<h2 style="text-align:center;">Sửa Category</h2>
+
+<form th:action="@{/admin/category/edit}" th:object="${category}" method="post">
+    <!-- id hidden -->
+    <input type="hidden" th:field="*{cate_id}"/>
+
+    <label for="cate_name">Tên Category:</label>
+    <input type="text" id="cate_name" th:field="*{cate_name}" required/>
+
+    <label for="iconFile">Chọn Icon mới (tuỳ chọn):</label>
+    <input id="iconFile" type="file" accept="image/*"/>
+    <!-- hidden lưu tên file -->
+    <input type="hidden" th:field="*{icons}" id="iconsHidden"/>
+    <div class="preview">
+        <span>Hiện tại:</span>
+        <img th:src="@{'/uploads/' + ${category.icons}}" alt="icon hiện tại"/>
+    </div>
+
+    <button type="submit">Lưu thay đổi</button>
+    <a th:href="@{/admin/category}">Quay lại</a>
+</form>
+
+<script>
+    const fileInput = document.getElementById('iconFile');
+    const hiddenIcons = document.getElementById('iconsHidden');
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files.length > 0) {
+            hiddenIcons.value = fileInput.files[0].name; // chỉ lưu tên file
+        }
+    });
+</script>
+
+</body>
+</html>
