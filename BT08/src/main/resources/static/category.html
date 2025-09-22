@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Category Management</title>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+</head>
+<body>
+<h1>Category CRUD 23110251</h1>
+
+<h3>Thêm Category</h3>
+<input type="text" id="cateName" placeholder="Category Name"/>
+<input type="text" id="cateIcon" placeholder="Icon"/>
+<button id="addBtn">Add</button>
+
+<h3>Danh sách Category</h3>
+<ul id="categoryList"></ul>
+
+<script>
+  function loadCategories() {
+    $.get("/api/categories", function(data) {
+      $("#categoryList").empty();
+      data.forEach(c => {
+        $("#categoryList").append(`
+            <li>
+              ${c.cateName} (${c.icon})
+              <button onclick="deleteCategory(${c.cateId})">Xóa</button>
+            </li>
+          `);
+      });
+    });
+  }
+
+  $("#addBtn").click(function() {
+    let cate = {
+      cateName: $("#cateName").val(),
+      icon: $("#cateIcon").val()
+    };
+    $.ajax({
+      url: "/api/categories",
+      type: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(cate),
+      success: function() {
+        alert("Thêm thành công");
+        loadCategories();
+      }
+    });
+  });
+
+  function deleteCategory(id) {
+    $.ajax({
+      url: "/api/categories/" + id,
+      type: "DELETE",
+      success: function() {
+        alert("Xóa thành công");
+        loadCategories();
+      }
+    });
+  }
+
+  $(document).ready(function() {
+    loadCategories();
+  });
+</script>
+</body>
+</html>
