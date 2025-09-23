@@ -12,7 +12,6 @@
 <h3>Thêm Category</h3>
 <input type="text" id="cateName" placeholder="Category Name">
 <input type="file" id="cateIconFile" accept="image/*">
-<input type="hidden" id="cateIcon">
 <button id="addBtn">Add</button>
 
 <h3>Danh sách Category</h3>
@@ -58,25 +57,33 @@
     $("#editIcon").val(fileName);
   });
 
-  // Thêm Category
-  $("#addBtn").click(function() {
-    let cate = {
-      cateName: $("#cateName").val(),
-      icon: $("#cateIcon").val()
-    };
+  $("#addBtn").click(function () {
+    let formData = new FormData();
+    formData.append("cateName", $("#cateName").val());
+    if ($("#cateIconFile")[0].files[0]) {
+      formData.append("icon", $("#cateIconFile")[0].files[0]);
+    }
+
     $.ajax({
       url: "/api/categories",
       type: "POST",
-      contentType: "application/json",
-      data: JSON.stringify(cate),
-      success: function() {
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (res) {
+        console.log("Thêm OK:", res);
+        alert("Thêm Category thành công!");
         loadCategories();
         $("#cateName").val("");
-        $("#cateIcon").val("");
         $("#cateIconFile").val("");
+      },
+      error: function (xhr) {
+        console.error("Error:", xhr.responseText);
+        alert("Thêm Category thất bại!");
       }
     });
   });
+
 
   // Xóa Category
   function deleteCategory(id) {
@@ -97,28 +104,34 @@
     $("#editForm").show();
   }
 
-  // Update Category
-  $("#updateBtn").click(function() {
+  $("#updateBtn").click(function () {
     let id = $("#editId").val();
-    let updatedCate = {
-      cateName: $("#editName").val(),
-      icon: $("#editIcon").val()
-    };
+    let formData = new FormData();
+    formData.append("cateName", $("#editName").val());
+
+    if ($("#editIconFile")[0].files[0]) {
+      formData.append("icon", $("#editIconFile")[0].files[0]);
+    }
+
     $.ajax({
       url: "/api/categories/" + id,
       type: "PUT",
-      contentType: "application/json",
-      data: JSON.stringify(updatedCate),
-      success: function() {
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function (res) {
+        console.log("Update OK:", res);
+        alert("Cập nhật Category thành công!");
         loadCategories();
         $("#editForm").hide();
-        $("#editId").val("");
-        $("#editName").val("");
-        $("#editIcon").val("");
-        $("#editIconFile").val("");
+      },
+      error: function (xhr) {
+        console.error("Error:", xhr.responseText);
+        alert("Cập nhật Category thất bại!");
       }
     });
   });
+
 
   // Cancel edit
   $("#cancelBtn").click(function() {

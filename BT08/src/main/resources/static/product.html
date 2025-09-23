@@ -77,9 +77,9 @@
         let product = {
             productName: $("#productName").val(),
             quantity: parseInt($("#quantity").val()),
-            unitPrice: parseFloat($("#unitPrice").val()),   // BigDecimal parse được từ số
+            unitPrice: $("#unitPrice").val(),
             description: $("#description").val(),
-            discount: parseFloat($("#discount").val()),     // BigDecimal parse được từ số
+            discount: $("#discount").val(),
             status: parseInt($("#status").val()),
             category: { cateId: parseInt($("#cateId").val()) }
         };
@@ -90,14 +90,9 @@
             contentType: "application/json",
             data: JSON.stringify(product),
             success: function(res) {
-                console.log("Thêm OK:", res);
-                loadProducts(); // reload lại danh sách
+                console.log("Thêm thành công:", res);
                 alert("Thêm sản phẩm thành công!");
-
-                // clear input sau khi thêm
-                $("#productName, #quantity, #unitPrice, #description, #discount").val("");
-                $("#status").val("1");
-                $("#cateId").prop("selectedIndex", 0);
+                loadProducts();
             },
             error: function(xhr) {
                 console.error("Error:", xhr.responseText);
@@ -106,21 +101,36 @@
         });
     });
 
-    // Xóa Product
-    function deleteProduct(id) {
-        console.log("Delete ID:", id);
+    // Update Product
+    $("#updateBtn").click(function() {
+        let id = $("#editId").val();
+        let updatedProduct = {
+            productName: $("#editName").val(),
+            quantity: $("#editQuantity").val(),
+            unitPrice: $("#editUnitPrice").val(),
+            description: $("#editDescription").val(),
+            discount: $("#editDiscount").val(),
+            status: $("#editStatus").val(),
+            category: { cateId: $("#editCateId").val() }
+        };
+
         $.ajax({
             url: "/api/products/" + id,
-            type: "DELETE",
-            success: function() {
+            type: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(updatedProduct),
+            success: function(res) {
+                console.log("Update thành công:", res);
+                alert("Cập nhật sản phẩm thành công!");
                 loadProducts();
+                $("#editForm").hide();
             },
             error: function(xhr) {
-                console.error("Delete error:", xhr.responseText);
-                alert("Xóa sản phẩm thất bại!");
+                console.error("Error:", xhr.responseText);
+                alert("Cập nhật sản phẩm thất bại!");
             }
         });
-    }
+    });
 
     // Hiển thị form sửa
     function showEdit(id, name, quantity, unitPrice, description, discount, status, cateId) {
