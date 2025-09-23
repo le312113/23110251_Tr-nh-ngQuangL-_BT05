@@ -23,6 +23,9 @@ public class CategoryService {
         return categoryRepository.findById(id);
     }
     public void deleteById(int cateId){
-        categoryRepository.deleteById(cateId);
+        Category category = categoryRepository.findById(cateId)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        categoryRepository.delete(category);
     }
 }

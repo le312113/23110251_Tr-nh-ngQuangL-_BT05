@@ -12,8 +12,10 @@ public class Category {
     private int cateId;
     @Column(name="cate_name")
     private String cateName;
-    private String icons;
+    @Column(name = "icons")
+    private String icon;
     @OneToMany(mappedBy = "category",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonManagedReference
     private List<Product> products;
 
     public int getCateId() {
@@ -32,12 +34,12 @@ public class Category {
         this.cateName = cateName;
     }
 
-    public String getIcons() {
-        return icons;
+    public String getIcon() {
+        return icon;
     }
 
-    public void setIcons(String icons) {
-        this.icons = icons;
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 
     public List<Product> getProducts() {

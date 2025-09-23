@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product CRUD</title>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+</head>
+<body>
+<h1>Product CRUD 23110251</h1>
+
+<!-- Form thêm -->
+<h3>Thêm Product</h3>
+<input type="text" id="productName" placeholder="Product Name">
+<input type="number" id="quantity" placeholder="Quantity">
+<input type="number" id="unitPrice" placeholder="Unit Price">
+<input type="text" id="description" placeholder="Description">
+<input type="number" id="discount" placeholder="Discount">
+<select id="status">
+    <option value="1">Active</option>
+    <option value="0">Inactive</option>
+</select>
+<select id="cateId"></select>
+<button id="addProductBtn">Add</button>
+
+<h3>Danh sách Product</h3>
+<ul id="productList"></ul>
+
+<!-- Form chỉnh sửa -->
+<div id="editForm" style="display:none; margin-top:20px;">
+    <h3>Chỉnh sửa Product</h3>
+    <input type="hidden" id="editId">
+    <input type="text" id="editName" placeholder="Product Name">
+    <input type="number" id="editQuantity" placeholder="Quantity">
+    <input type="number" id="editUnitPrice" placeholder="Unit Price">
+    <input type="text" id="editDescription" placeholder="Description">
+    <input type="number" id="editDiscount" placeholder="Discount">
+    <select id="editStatus">
+        <option value="1">Active</option>
+        <option value="0">Inactive</option>
+    </select>
+    <select id="editCateId"></select>
+    <button id="updateBtn">Update</button>
+    <button id="cancelBtn">Cancel</button>
+</div>
+
+<script>
+    // Load Category vào dropdown
+    function loadCategoriesDropdown(selectId) {
+        $.get("/api/categories", function(data) {
+            $(selectId).empty();
+            data.forEach(c => {
+                $(selectId).append(`<option value="${c.cateId}">${c.cateName}</option>`);
+            });
+        });
+    }
+
+    // Load Product list
+    function loadProducts() {
+        $.get("/api/products", function(data) {
+            $("#productList").empty();
+            data.forEach(p => {
+                $("#productList").append(`
+                    <li>
+                        ${p.productName} - ${p.unitPrice}₫
+                        | SL: ${p.quantity}
+                        | Category: ${p.category ? p.category.cateName : "No Category"}
+                        <button onclick="showEdit(${p.productId}, '${p.productName}', ${p.quantity}, ${p.unitPrice}, '${p.description || ""}', ${p.discount || 0}, ${p.status}, ${p.category ? p.category.cateId : null})">Sửa</button>
+                        <button onclick="deleteProduct(${p.productId})">Xóa</button>
+                    </li>
+                `);
+            });
+        });
+    }
+
+    // Thêm Product
+    $("#addProductBtn").click(function() {
+        let product = {
+            productName: $("#productName").val(),
+            quantity: parseInt($("#quantity").val()),
+            unitPrice: parseFloat($("#unitPrice").val()),   // BigDecimal parse được từ số
+            description: $("#description").val(),
+            discount: parseFloat($("#discount").val()),     // BigDecimal parse được từ số
+            status: parseInt($("#status").val()),
+            category: { cateId: parseInt($("#cateId").val()) }
+        };
+
+        $.ajax({
+            url: "/api/products",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(product),
+            success: function(res) {
+                console.log("Thêm OK:", res);
+                loadProducts(); // reload lại danh sách
+                alert("Thêm sản phẩm thành công!");
+
+                // clear input sau khi thêm
+                $("#productName, #quantity, #unitPrice, #description, #discount").val("");
+                $("#status").val("1");
+                $("#cateId").prop("selectedIndex", 0);
+            },
+            error: function(xhr) {
+                console.error("Error:", xhr.responseText);
+                alert("Thêm sản phẩm thất bại!");
+            }
+        });
+    });
+
+    // Xóa Product
+    function deleteProduct(id) {
+        console.log("Delete ID:", id);
+        $.ajax({
+            url: "/api/products/" + id,
+            type: "DELETE",
+            success: function() {
+                loadProducts();
+            },
+            error: function(xhr) {
+                console.error("Delete error:", xhr.responseText);
+                alert("Xóa sản phẩm thất bại!");
+            }
+        });
+    }
+
+    // Hiển thị form sửa
+    function showEdit(id, name, quantity, unitPrice, description, discount, status, cateId) {
+        $("#editId").val(id);
+        $("#editName").val(name);
+        $("#editQuantity").val(quantity);
+        $("#editUnitPrice").val(unitPrice);
+        $("#editDescription").val(description);
+        $("#editDiscount").val(discount);
+        $("#editStatus").val(status);
+        loadCategoriesDropdown("#editCateId");
+        setTimeout(() => { $("#editCateId").val(cateId); }, 200); // chọn đúng category
+        $("#editForm").show();
+    }
+
+    // Update Product
+    $("#updateBtn").click(function() {
+        let id = $("#editId").val();
+        let updatedProduct = {
+            productName: $("#editName").val(),
+            quantity: parseInt($("#editQuantity").val()),
+            unitPrice: parseFloat($("#editUnitPrice").val()),
+            description: $("#editDescription").val(),
+            discount: parseFloat($("#editDiscount").val()),
+            status: parseInt($("#editStatus").val()),
+            category: { cateId: parseInt($("#editCateId").val()) }
+        };
+        $.ajax({
+            url: "/api/products/" + id,
+            type: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(updatedProduct),
+            success: function() {
+                loadProducts();
+                $("#editForm").hide();
+            }
+        });
+    });
+
+    // Cancel edit
+    $("#cancelBtn").click(function() {
+        $("#editForm").hide();
+    });
+
+    // Load khi mở trang
+    $(document).ready(function() {
+        loadCategoriesDropdown("#cateId");
+        loadProducts();
+    });
+</script>
+</body>
+</html>

@@ -2,35 +2,63 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Category Management</title>
+  <title>Category CRUD</title>
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 </head>
 <body>
 <h1>Category CRUD 23110251</h1>
 
+<!-- Form thêm -->
 <h3>Thêm Category</h3>
-<input type="text" id="cateName" placeholder="Category Name"/>
-<input type="text" id="cateIcon" placeholder="Icon"/>
+<input type="text" id="cateName" placeholder="Category Name">
+<input type="file" id="cateIconFile" accept="image/*">
+<input type="hidden" id="cateIcon">
 <button id="addBtn">Add</button>
 
 <h3>Danh sách Category</h3>
 <ul id="categoryList"></ul>
 
+<!-- Form chỉnh sửa -->
+<div id="editForm" style="display:none; margin-top:20px;">
+  <h3>Chỉnh sửa Category</h3>
+  <input type="hidden" id="editId">
+  <input type="text" id="editName" placeholder="Category Name">
+  <input type="file" id="editIconFile" accept="image/*">
+  <input type="hidden" id="editIcon">
+  <button id="updateBtn">Update</button>
+  <button id="cancelBtn">Cancel</button>
+</div>
+
 <script>
+  // Load Category list
   function loadCategories() {
     $.get("/api/categories", function(data) {
       $("#categoryList").empty();
       data.forEach(c => {
-        $("#categoryList").append(`
-            <li>
-              ${c.cateName} (${c.icon})
-              <button onclick="deleteCategory(${c.cateId})">Xóa</button>
-            </li>
-          `);
+        $("#categoryList").append(
+                `<li>
+               ${c.cateName} (${c.icon ? c.icon : "No icon"})
+               <button onclick="showEdit(${c.cateId}, '${c.cateName}', '${c.icon || ""}')">Sửa</button>
+               <button onclick="deleteCategory(${c.cateId})">Xóa</button>
+             </li>`
+        );
       });
     });
   }
 
+  // Khi chọn file (Add)
+  $("#cateIconFile").change(function() {
+    let fileName = this.files[0] ? this.files[0].name : "";
+    $("#cateIcon").val(fileName);
+  });
+
+  // Khi chọn file (Edit)
+  $("#editIconFile").change(function() {
+    let fileName = this.files[0] ? this.files[0].name : "";
+    $("#editIcon").val(fileName);
+  });
+
+  // Thêm Category
   $("#addBtn").click(function() {
     let cate = {
       cateName: $("#cateName").val(),
@@ -42,23 +70,62 @@
       contentType: "application/json",
       data: JSON.stringify(cate),
       success: function() {
-        alert("Thêm thành công");
         loadCategories();
+        $("#cateName").val("");
+        $("#cateIcon").val("");
+        $("#cateIconFile").val("");
       }
     });
   });
 
+  // Xóa Category
   function deleteCategory(id) {
     $.ajax({
       url: "/api/categories/" + id,
       type: "DELETE",
       success: function() {
-        alert("Xóa thành công");
         loadCategories();
       }
     });
   }
 
+  // Hiển thị form sửa
+  function showEdit(id, name, icon) {
+    $("#editId").val(id);
+    $("#editName").val(name);
+    $("#editIcon").val(icon);
+    $("#editForm").show();
+  }
+
+  // Update Category
+  $("#updateBtn").click(function() {
+    let id = $("#editId").val();
+    let updatedCate = {
+      cateName: $("#editName").val(),
+      icon: $("#editIcon").val()
+    };
+    $.ajax({
+      url: "/api/categories/" + id,
+      type: "PUT",
+      contentType: "application/json",
+      data: JSON.stringify(updatedCate),
+      success: function() {
+        loadCategories();
+        $("#editForm").hide();
+        $("#editId").val("");
+        $("#editName").val("");
+        $("#editIcon").val("");
+        $("#editIconFile").val("");
+      }
+    });
+  });
+
+  // Cancel edit
+  $("#cancelBtn").click(function() {
+    $("#editForm").hide();
+  });
+
+  // Load khi mở trang
   $(document).ready(function() {
     loadCategories();
   });

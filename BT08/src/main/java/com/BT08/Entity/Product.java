@@ -19,11 +19,13 @@ public class Product {
     private String images;
     private String description;
     private BigDecimal discount;
-    @Column(name="create_date")
-    private Date creationDate;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "create_date")
+    private Date creationDate = new Date();
     private int status;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="cate_id",referencedColumnName = "cate_id")
+    @com.fasterxml.jackson.annotation.JsonBackReference
     private Category category;
 
     public int getProductId() {

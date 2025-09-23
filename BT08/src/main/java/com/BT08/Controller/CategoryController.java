@@ -37,7 +37,7 @@ public class CategoryController {
     public ResponseEntity<Category> update(@PathVariable Integer id, @RequestBody Category newCategory) {
         return categoryService.findById(id).map(category -> {
             category.setCateName(newCategory.getCateName());
-            category.setIcons(newCategory.getIcons());
+            category.setIcon(newCategory.getIcon());
             return ResponseEntity.ok(categoryService.save(category));
         }).orElse(ResponseEntity.notFound().build());
     }
