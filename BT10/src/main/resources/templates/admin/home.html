@@ -33,12 +33,16 @@
         </tr>
     </table>
     <div>
+        <a th:href="@{/admin/product}" class="btn btn-primary">Quản lý sản phẩm</a>
+    </div>
+    <div>
         <span th:each="i : ${#numbers.sequence(0, totalPages-1)}">
             <a th:href="@{|/admin/home?page=${i}&keyword=${keyword}|}"
                th:text="${i+1}"
                th:classappend="${i==currentPage} ? 'active'"></a>
         </span>
     </div>
+
 </main>
 </body>
 </html>

@@ -8,6 +8,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CategoryService {
     @Autowired
@@ -27,4 +29,5 @@ public class CategoryService {
     public Category findCategoryById(Long id){
         return categoryRepository.findByCateId(id);
     }
+    public List<Category> findAllCategories(){return categoryRepository.findAll();}
 }
