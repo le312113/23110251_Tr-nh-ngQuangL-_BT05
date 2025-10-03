@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Home</title>
+</head>
+<body>
+<h1>Welcome, <span sec:authentication="name"></span></h1>
+<div sec:authorize="hasRole('ADMIN')">
+    <p>You are an admin!</p>
+</div>
+<div sec:authorize="hasRole('USER')">
+    <p>You are a user!</p>
+</div>
+</body>
+</html>
