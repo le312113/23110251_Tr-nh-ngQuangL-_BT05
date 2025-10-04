@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title>Login</title>
 </head>
 <body>
 <!-- The form action is POSTing to /login which Spring Security will handle automatically -->
 <form action="/login" method="post">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
     <div>
         <label for="username">Username</label>
         <input type="text" name="username" id="username" required />

@@ -19,15 +19,31 @@ public class CustomUserDetailsService implements org.springframework.security.co
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserInfo userInfo = userInfoRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
-        return new User(
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        System.out.println("🔍 Attempting to load user: " + email);
+
+        UserInfo userInfo = userInfoRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    System.out.println("❌ User not found: " + email);
+                    return new UsernameNotFoundException("User not found with email: " + email);
+                });
+
+        System.out.println("✅ User found: " + userInfo.getEmail());
+        System.out.println("📋 Roles: " + userInfo.getRoles());
+        System.out.println("🔑 Password hash: " + userInfo.getPassword().substring(0, 20) + "...");
+
+        UserDetails user = new User(
                 userInfo.getEmail(),
                 userInfo.getPassword(),
                 java.util.Arrays.stream(userInfo.getRoles().split(","))
-                        .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role))
+                        .map(role -> {
+                            System.out.println("🎭 Adding role: ROLE_" + role);
+                            return new org.springframework.security.core.authority.SimpleGrantedAuthority(role);
+                        })
                         .collect(Collectors.toList())
         );
+
+        System.out.println("✅ UserDetails created successfully");
+        return user;
     }
 }

@@ -40,16 +40,24 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/login", "/register").permitAll()  // Allow open access to login and register
-                                .anyRequest().authenticated()  // Require authentication for other requests
+                                .requestMatchers("/login", "/register").permitAll()
+                                .anyRequest().authenticated()
                 )
                 .formLogin(formLogin ->
                         formLogin
-                                .loginPage("/login")  // Custom login page
+                                .loginPage("/login")
+                                .loginProcessingUrl("/login") // URL xử lý login
+                                .usernameParameter("username") // tên field username
+                                .passwordParameter("password") // tên field password
+                                .defaultSuccessUrl("/home", true)
+                                .failureUrl("/login?error=true") // URL khi login fail
                                 .permitAll()
-                                .defaultSuccessUrl("/home", true)  // Redirect to /home after successful login
                 )
-                .logout(withDefaults());
+                .logout(logout ->
+                        logout
+                                .logoutSuccessUrl("/login?logout=true")
+                                .permitAll()
+                );
 
         return http.build();
     }
