@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <!-- Thymeleaf sẽ bơm context-path vào đây; nếu không dùng Thymeleaf content="" vẫn ok -->
+    <title>Support Chat Demo</title>
+    <style>
+        :root { --bd:#ddd; --pad:10px; }
+        body { font-family: system-ui, Arial, sans-serif; max-width: 900px; margin: 24px auto; }
+        h1 { margin: 0 0 12px }
+        .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .box { border: 1px solid var(--bd); padding: var(--pad); border-radius: 8px; }
+        #messages, #privateMessages { height: 320px; overflow-y: auto; background: #fafafa; }
+        .msg { margin: 6px 0; }
+        .sys { color: #666; font-style: italic; }
+        .me { font-weight: 600; }
+        .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        input[type=text] { padding: 8px; min-width: 220px;}
+        button { padding: 8px 12px; cursor: pointer; }
+        small { color:#666 }
+    </style>
+</head>
+<body>
+<h1>Support Chat Demo</h1>
+
+<div class="row box">
+    <label>Username: <input id="username" type="text" placeholder="guest123"/></label>
+    <button id="connectBtn">Connect</button>
+    <button id="disconnectBtn" disabled>Disconnect</button>
+    <small>Endpoint WS: <code>/ws</code> | App prefix: <code>/app</code> | Topics: <code>/topic/public</code>, <code>/user/queue/support</code></small>
+</div>
+
+<div class="two">
+    <!-- Public room -->
+    <div class="box">
+        <h3>Phòng Public</h3>
+        <div id="messages" class="box"></div>
+        <div class="row" style="margin-top:8px;">
+            <input id="publicInput" type="text" placeholder="Type a message for everyone..."/>
+            <button id="sendPublicBtn" disabled>Send</button>
+            <button id="loadHistoryBtn">Tải lịch sử (20)</button>
+        </div>
+    </div>
+
+    <!-- Private chat -->
+    <div class="box">
+        <h3>Chat Riêng (KH ↔ Agent)</h3>
+        <div class="row">
+            <label>Receiver: <input id="receiver" type="text" placeholder="agent1"/></label>
+            <small>Client này sẽ nhận riêng nếu username của bạn trùng <code>receiver</code> bên người gửi khác.</small>
+        </div>
+        <div id="privateMessages" class="box"></div>
+        <div class="row" style="margin-top:8px;">
+            <input id="privateInput" type="text" placeholder="Type a private message..."/>
+            <button id="sendPrivateBtn" disabled>Send private</button>
+            <button id="loadPrivateBtn">Lịch sử (user ↔ receiver)</button>
+        </div>
+    </div>
+</div>
+
+<!-- Bạn có thể giữ CDN dưới đây.
+     Nếu sợ CDN bị chặn, thay bằng webjars:
+     <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+     <script src="/webjars/stomp-websocket/stomp.min.js"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script th:inline="javascript">
+    let stompClient = null;
+    let currentUser = null;
+
+    const $ = (id) => document.getElementById(id);
+    const msgDiv = $("messages");
+    const prvDiv = $("privateMessages");
+
+    // Thymeleaf sẽ render đúng endpoint theo context-path (vd: "/BT12/ws"), fallback "/ws"
+    const WS_ENDPOINT = /*[[@{/ws}]]*/ "/ws";
+
+    function line(div, text, cls) {
+        const el = document.createElement("div");
+        el.className = "msg " + (cls || "");
+        el.textContent = text;
+        div.appendChild(el);
+        el.scrollIntoView();
+    }
+
+    // CONNECT
+    $("connectBtn").onclick = () => {
+        currentUser = $("username").value.trim() || "guest";
+        const socket = new SockJS(WS_ENDPOINT);
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, frame => {
+            line(msgDiv, `✅ Connected as ${currentUser}`, "sys");
+            $("sendPublicBtn").disabled = false;
+            $("sendPrivateBtn").disabled = false;
+            $("disconnectBtn").disabled = false;
+
+            // subscribe public room
+            stompClient.subscribe("/topic/public", message => {
+                const m = JSON.parse(message.body);
+                const who = m.sender ? `${m.sender}: ` : "";
+                const txt = m.content || (m.type === 'JOIN' ? '(joined)' : '');
+                line(msgDiv, who + txt, m.sender === currentUser ? "me" : "");
+            });
+
+            // subscribe hộp thư riêng của chính user hiện tại
+            stompClient.subscribe("/user/queue/support", message => {
+                const m = JSON.parse(message.body);
+                const who = m.sender ? `${m.sender} → you: ` : "";
+                line(prvDiv, who + (m.content || ""), m.sender === currentUser ? "me" : "");
+            });
+
+            // thông báo join (đồng thời bạn đã lưu DB phía server)
+            stompClient.send("/app/chat.join", {}, JSON.stringify({ sender: currentUser }));
+        }, err => {
+            console.error("WS connect error:", err);
+            line(msgDiv, "❌ WebSocket connect error — mở DevTools → Network → WS để xem chi tiết", "sys");
+        });
+    };
+
+    // DISCONNECT
+    $("disconnectBtn").onclick = () => {
+        if (stompClient) stompClient.disconnect(() => line(msgDiv, "🔌 Disconnected", "sys"));
+        $("sendPublicBtn").disabled = true;
+        $("sendPrivateBtn").disabled = true;
+        $("disconnectBtn").disabled = true;
+    };
+
+    // SEND PUBLIC
+    $("sendPublicBtn").onclick = () => {
+        const content = $("publicInput").value.trim();
+        if (!content || !stompClient) return;
+        stompClient.send("/app/chat.sendPublic", {}, JSON.stringify({
+            sender: currentUser, content, type: "CHAT", room: "public"
+        }));
+        $("publicInput").value = "";
+    };
+
+    // SEND PRIVATE
+    $("sendPrivateBtn").onclick = () => {
+        const content = $("privateInput").value.trim();
+        const receiver = $("receiver").value.trim();
+        if (!content || !receiver || !stompClient) return;
+
+        // header 'receiver' phải đúng để server nhận trong @Header("receiver")
+        stompClient.send("/app/chat.sendPrivate", { receiver },
+            JSON.stringify({ sender: currentUser, content, type: "CHAT" })
+        );
+
+        // echo UI để thấy ngay ở panel phải
+        line(prvDiv, `you → ${receiver}: ${content}`, "me");
+        $("privateInput").value = "";
+    };
+</script>
+
+</body>
+</html>
